@@ -15,7 +15,8 @@ Ollama must run in the background to be able to connect to your local AI chat bo
 In folder Config there is config.json add your Discord token then copy the whole file config.json and go to
 AIChatDiscordBot\AIChatDiscordBot\bin\Debug\net9.0 and paste it there also there is your AIChatDiscordBot.exe
 to start the program. <br /> <br />
-If you get in the console this error: "No connection could be made because the target machine actively refused it." check if your "localHost" number is correct and token for config.json server or create one. <br /> Link: https://lavalink.darrennathanael.com/SSL/lavalink-with-ssl/#tunnelbroker-guide
+If you get in the console this error: "No connection could be made because the target machine actively refused it." check if your "localHost" number is correct and token for config.json server or create one. <br />
+
 # Slash commands
 /ask (your message) <br />
 /forgetme - Start a fresh conversation with the AI only for you. <br />
