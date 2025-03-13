@@ -16,18 +16,18 @@ namespace AIChatDiscordBot.SlashCommands
 
             var aiResponseEmbed = new DiscordEmbedBuilder()
             {
-                Color = aiResponse.Contains("Oops! Something went wrong") ? DiscordColor.Red : DiscordColor.Blue,
+                Color = aiResponse.Contains("Oops! Something went wrong") ? DiscordColor.Red :  new DiscordColor(52, 152, 219),
                 Author = new DiscordEmbedBuilder.EmbedAuthor
                 {
-                    Name = $"{ctx.User.Username} asked:\n{message}",
+                    Name = $"{username} asked:\n{message}",
                     IconUrl = ctx.User.AvatarUrl
                 },
                 Title = "AI Response",
                 Description = aiResponse,
             };
 
-            Console.WriteLine($"\n=============\n {ctx.User.Username} asked:\n{message}\n =============\n");
-            Console.WriteLine($"{aiResponse}\n");
+            Console.WriteLine($"\n=============\n {username} asked:\n{message}\n=============\n");
+            Console.WriteLine($"\n-----------------\n AI responded:\n{aiResponse}\n-----------------\n");
 
             await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(aiResponseEmbed));
         }
