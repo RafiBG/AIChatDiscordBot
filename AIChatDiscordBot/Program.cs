@@ -15,8 +15,9 @@ public class Program
 
         if (string.IsNullOrWhiteSpace(jsonReader.token))
         {
-            Console.WriteLine("The token in config.json is missing or invalid. Please provide a valid bot token.");
+            Console.WriteLine("The token in configOllama.json or configGpt4All.json is missing or invalid. Please provide a valid bot token.");
         }
+
         var discordConfig = new DiscordConfiguration()
         {
             Intents = DiscordIntents.All,
@@ -34,6 +35,7 @@ public class Program
         slashCommandConfig.RegisterCommands<AIChatSL>();
 
         OllamaClient.Initialize(jsonReader.localHost, jsonReader.model,jsonReader.systemMessage);
+        Gpt4AllClient.Initialize(jsonReader.localHost, jsonReader.model, jsonReader.systemMessage);
 
         // Connect for the bot to be online
         await Client.ConnectAsync(new DiscordActivity(" /help",ActivityType.ListeningTo));

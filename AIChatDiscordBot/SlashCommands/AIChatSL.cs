@@ -1,33 +1,67 @@
-﻿using DSharpPlus.Entities;
+﻿using AIChatDiscordBot.Config;
+using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
-
 namespace AIChatDiscordBot.SlashCommands
 {
     public class AIChatSL : ApplicationCommandModule
     {
+        private static string _aiProvider;
+        private static string _modelName;
+
+        static AIChatSL()
+        {
+            LoadConfiguration();
+        }
+
+        private static void LoadConfiguration()
+        {
+            if (File.Exists("configGPT4All.json"))
+            {
+                _aiProvider = "GPT4All";
+            }
+            else if (File.Exists("configOllama.json"))
+            {
+                _aiProvider = "Ollama";
+            }
+            else
+            {
+                _aiProvider = "None";
+            }
+            // Load model name from JSON
+            _modelName = JSONReader.GetModelName();
+        }
+
         [SlashCommand("ask", "Ask the AI a question")]
         public async Task AskAI(InteractionContext ctx, [Option("message", "Enter your message to the AI")] string message)
         {
             await ctx.DeferAsync();
             ulong userId = ctx.User.Id;
             string username = ctx.User.Username;
+            string aiResponse = "AI Provider Not Found.";
 
-            string aiResponse = await OllamaClient.GetResponseAsync(userId, username, message);
+            if (_aiProvider == "GPT4All")
+            {
+                aiResponse = await Gpt4AllClient.GetResponseAsync(userId, username, message);
+            }
+            else if (_aiProvider == "Ollama")
+            {
+                aiResponse = await OllamaClient.GetResponseAsync(userId, username, message);
+            }
 
             var aiResponseEmbed = new DiscordEmbedBuilder()
             {
-                Color = aiResponse.Contains("Oops! Something went wrong") ? DiscordColor.Red :  new DiscordColor(52, 152, 219),
+                Color = aiResponse.Contains("Oops! Something went wrong") ? DiscordColor.Red : new DiscordColor(52, 152, 219),
                 Author = new DiscordEmbedBuilder.EmbedAuthor
                 {
                     Name = $"{username} asked:\n{message}",
                     IconUrl = ctx.User.AvatarUrl
                 },
-                Title = "AI Response",
+                Title = $"Model: {_modelName}\n\nAI response",
                 Description = aiResponse,
             };
-
-            Console.WriteLine($"\n=============\n {username} asked:\n{message}\n=============\n");
-            Console.WriteLine($"\n-----------------\n AI responded:\n{aiResponse}\n-----------------\n");
+            Console.WriteLine($"\n{DateTime.Now}");
+            Console.WriteLine($"=============\n {username} asked:\n{message}\n=============\n");
+            Console.WriteLine($"-----------------\n AI {_modelName} responded:\n{aiResponse}\n-----------------\n");
 
             await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(aiResponseEmbed));
         }
@@ -75,7 +109,7 @@ namespace AIChatDiscordBot.SlashCommands
         {
             await ctx.DeferAsync();
 
-            var newSessionEmbed = new DiscordEmbedBuilder()
+            var helpEmbed = new DiscordEmbedBuilder()
             {
                 Color = DiscordColor.Green,
                 Title = "AI chat bot commands",
@@ -85,7 +119,7 @@ namespace AIChatDiscordBot.SlashCommands
                               "**/help** - Show all the commands for the bot"
             };
 
-            await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(newSessionEmbed));
+            await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(helpEmbed));
         }
     }
 }
