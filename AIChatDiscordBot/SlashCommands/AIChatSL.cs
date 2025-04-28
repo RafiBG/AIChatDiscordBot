@@ -53,7 +53,8 @@ namespace AIChatDiscordBot.SlashCommands
                 Color = aiResponse.Contains("Oops! Something went wrong") ? DiscordColor.Red : new DiscordColor(52, 152, 219),
                 Author = new DiscordEmbedBuilder.EmbedAuthor
                 {
-                    Name = $"{username} asked:\n{message}",
+                    //Name = $"{username} asked:\n{message}",
+                    Name = $"{message}",
                     IconUrl = ctx.User.AvatarUrl
                 },
                 Title = $"Model: {_modelName}\n\nAI response",
