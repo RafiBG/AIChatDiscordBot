@@ -57,4 +57,4 @@ If you get in the console this error: "No connection could be made because the t
 # Results 
 ![ask0](https://github.com/user-attachments/assets/30b107ec-5cfc-41f0-b8e8-1ac7398f250e)
 
-![ask1](https://github.com/user-attachments/assets/6487ee03-2079-4c34-9d85-d7bc83233fd1)
+![AI response](https://github.com/user-attachments/assets/3a3606df-7b22-4f56-a2f9-83c83fba4610)
