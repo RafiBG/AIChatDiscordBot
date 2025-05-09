@@ -1,4 +1,5 @@
 ﻿using AIChatDiscordBot.Config;
+using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 namespace AIChatDiscordBot.SlashCommands
@@ -7,6 +8,7 @@ namespace AIChatDiscordBot.SlashCommands
     {
         private static string _aiProvider;
         private static string _modelName;
+        private static readonly SemaphoreSlim LockUsersAskSpam = new(1,1);
 
         static AIChatSL()
         {
@@ -34,37 +36,56 @@ namespace AIChatDiscordBot.SlashCommands
         [SlashCommand("ask", "Ask the AI a question")]
         public async Task AskAI(InteractionContext ctx, [Option("message", "Enter your message to the AI")] string message)
         {
-            await ctx.DeferAsync();
-            ulong userId = ctx.User.Id;
-            string username = ctx.User.Username;
-            string aiResponse = "AI Provider Not Found.";
-
-            if (_aiProvider == "GPT4All")
+            //Check if user already asked the AI and dont accept any other request 
+            if (!await LockUsersAskSpam.WaitAsync(0))
             {
-                aiResponse = await Gpt4AllClient.GetResponseAsync(userId, username, message);
-            }
-            else if (_aiProvider == "Ollama")
-            {
-                aiResponse = await OllamaClient.GetResponseAsync(userId, username, message);
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                    new DiscordInteractionResponseBuilder()
+                    .WithContent("The AI is currently busy with another request. Please try again shortly.")
+                    .AsEphemeral());
+                return;
             }
 
-            var aiResponseEmbed = new DiscordEmbedBuilder()
+            try
             {
-                Color = aiResponse.Contains("Oops! Something went wrong") ? DiscordColor.Red : new DiscordColor(52, 152, 219),
-                Author = new DiscordEmbedBuilder.EmbedAuthor
+                await ctx.DeferAsync();
+                ulong userId = ctx.User.Id;
+                string username = ctx.User.Username;
+                string aiResponse = "AI Provider Not Found.";
+
+                if (_aiProvider == "GPT4All")
                 {
-                    //Name = $"{username} asked:\n{message}",
-                    Name = $"{message}",
-                    IconUrl = ctx.User.AvatarUrl
-                },
-                Title = $"Model: {_modelName}\n\nAI response",
-                Description = aiResponse,
-            };
-            Console.WriteLine($"\n{DateTime.Now}");
-            Console.WriteLine($"=============\n {username} asked:\n{message}\n=============\n");
-            Console.WriteLine($"-----------------\n AI {_modelName} responded:\n{aiResponse}\n-----------------\n");
+                    aiResponse = await Gpt4AllClient.GetResponseAsync(userId, username, message);
+                }
+                else if (_aiProvider == "Ollama")
+                {
+                    aiResponse = await OllamaClient.GetResponseAsync(userId, username, message);
+                }
 
-            await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(aiResponseEmbed));
+                var aiResponseEmbed = new DiscordEmbedBuilder()
+                {
+                    Color = aiResponse.Contains("Oops! Something went wrong") ? DiscordColor.Red : new DiscordColor(52, 152, 219),
+                    Author = new DiscordEmbedBuilder.EmbedAuthor
+                    {
+                        //Name = $"{username} asked:\n{message}",
+                        Name = $"{message}",
+                        IconUrl = ctx.User.AvatarUrl
+                    },
+                    Title = $"Model: {_modelName}\n\nAI response",
+                    Description = aiResponse,
+                };
+                Console.WriteLine($"\n{DateTime.Now}");
+                Console.WriteLine($"=============\n {username} asked:\n{message}\n=============\n");
+                Console.WriteLine($"-----------------\n AI {_modelName} responded:\n{aiResponse}\n-----------------\n");
+
+                await ctx.EditResponseAsync(new DiscordWebhookBuilder().AddEmbed(aiResponseEmbed));
+            }
+            // When AI is done accept new request. Even if there is error it should accept again shortly
+            finally
+            {
+                LockUsersAskSpam.Release();
+            }
+            
         }
 
         [SlashCommand("forgetme", "Start a fresh conversation with the AI only for you.")]
