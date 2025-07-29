@@ -1,9 +1,15 @@
 {
   "token": "YourDiscordBotToken",
-  // If you want to use different ai change the name. It must be the full name of the model
+  // If you want to use different AI model change the name. It must be the full name of the model
   "model": "llama3.2:3b",
   // By default this are the numbers of your local host. Check if your last five numbers are diferent if yes just change this ones to be the same,
   "localHost": "11434",
+  // The channel IDs where the bot is allowed to respond. Add your channel IDs here.
+  // You can find the channel ID by enabling developer mode in Discord and right-clicking the channel.
+  // Example: [1234567890] for one channel or [1234567890, 9876543210] for multiple channels.
+  // Make sure to replace these with actual channel IDs.
+  // If you want to response in all channels leave it empty like this: "allowedChannelIds": [],
+  "allowedChannelIds": [],
   // The AI bot message on what he must do and how to react.
   "systemMessage": "  
 			  You are a friendly and funny AI assistant who helps users in Discord.

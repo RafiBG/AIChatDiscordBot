@@ -7,6 +7,7 @@ namespace AIChatDiscordBot.Config
         public string token { get; set; }
         public string model { get; set; }
         public string localHost { get; set; }
+        public List<ulong> allowedChannelIds { get; set; }
         public string systemMessage { get; set; }
 
         private string filePath;
@@ -14,7 +15,7 @@ namespace AIChatDiscordBot.Config
         private string yourDirectory { get; set; } = AppDomain.CurrentDomain.BaseDirectory;
 
         public static string gpt4AllConfig = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "configGPT4All.json");
-        private static string defaultConfig = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "configOllama.json");
+        public static string defaultConfig = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "configOllama.json");
 
         public async Task ReadJSON()
         {
@@ -44,8 +45,9 @@ namespace AIChatDiscordBot.Config
                 this.token = data.token;
                 this.model = data.model;
                 this.localHost = data.localHost;
+                this.allowedChannelIds = data.allowedChannelIds;
                 this.systemMessage = data.systemMessage;
-
+                
                 // For debug
                 Console.WriteLine($"Loaded Config:");
                 Console.WriteLine($"Model: {this.model}");
@@ -82,7 +84,8 @@ namespace AIChatDiscordBot.Config
             public string token { get; set; }
             public string model { get; set; }
             public string localHost { get; set; }
-            public string systemMessage { get; set; }
+            public List<ulong> allowedChannelIds { get; set; }
+            public string systemMessage { get; set; } 
         }
     }
 }
