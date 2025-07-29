@@ -2,6 +2,7 @@
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
+using Newtonsoft.Json;
 namespace AIChatDiscordBot.SlashCommands
 {
     public class AIChatSL : ApplicationCommandModule
@@ -9,6 +10,7 @@ namespace AIChatDiscordBot.SlashCommands
         private static string _aiProvider;
         private static string _modelName;
         private static readonly SemaphoreSlim LockUsersAskSpam = new(1,1);
+        private static List<ulong> _allowedChannelIds = new();
 
         static AIChatSL()
         {
@@ -17,6 +19,7 @@ namespace AIChatDiscordBot.SlashCommands
 
         private static void LoadConfiguration()
         {
+
             if (File.Exists("configGPT4All.json"))
             {
                 _aiProvider = "GPT4All";
@@ -29,22 +32,40 @@ namespace AIChatDiscordBot.SlashCommands
             {
                 _aiProvider = "None";
             }
-            // Load model name from JSON
+
             _modelName = JSONReader.GetModelName();
+            // Load allowed channel IDs from the JSON file
+            string path = File.Exists(JSONReader.gpt4AllConfig) ? JSONReader.gpt4AllConfig : JSONReader.defaultConfig;
+            if (File.Exists(path))
+            {
+                string json = File.ReadAllText(path);
+                var data = JsonConvert.DeserializeObject<JSONReader.JSONStructure>(json);
+                if (data.allowedChannelIds != null)
+                    _allowedChannelIds = data.allowedChannelIds;
+            }
         }
 
         [SlashCommand("ask", "Ask the AI a question")]
         public async Task AskAI(InteractionContext ctx, [Option("message", "Enter your message to the AI")] string message)
         {
-            //Check if user already asked the AI and dont accept any other request 
-            if (!await LockUsersAskSpam.WaitAsync(0))
+            // Check if the AI provider is set and if the channel is allowed
+            if (_allowedChannelIds.Count > 0 && !_allowedChannelIds.Contains(ctx.Channel.Id))
             {
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
                     new DiscordInteractionResponseBuilder()
-                    .WithContent("The AI is currently busy with another request. Please try again shortly.")
+                    .WithContent("This channel is not allowed for AI responses.")
                     .AsEphemeral());
                 return;
             }
+            //Check if user already asked the AI and dont accept any other request 
+                if (!await LockUsersAskSpam.WaitAsync(0))
+                {
+                    await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource,
+                        new DiscordInteractionResponseBuilder()
+                        .WithContent("The AI is currently busy with another request. Please try again shortly.")
+                        .AsEphemeral());
+                    return;
+                }
 
             try
             {
